@@ -1,0 +1,20 @@
+version: 0.2
+phases:
+  install:
+    runtime-versions:
+      java: openjdk8
+  build:
+    commands:
+      - echo Build started on `date`
+      - export BUCKET=feature-crud-bucket-v1
+      - mvn package
+      - unzip target/HelloWorld-1.0.jar
+      - aws cloudformation package --template-file template.yaml --s3-bucket $BUCKET --output-template-file outputtemplate.yaml
+  post_build:
+    commands:
+      - echo Build completed on `date` !!!
+artifacts:
+  files:
+    - target/HelloWorld-1.0.jar
+    - template.yaml
+    - outputtemplate.yaml
