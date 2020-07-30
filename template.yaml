@@ -1,9 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: >
-  AWS
-
-  Sample SAM Template for AWS
 
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
@@ -14,7 +10,6 @@ Globals:
 
 Resources:
 
-#  HelloWorldFunction:
   RestApi:
     Type: AWS::Serverless::Api # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
@@ -36,7 +31,7 @@ Resources:
             Path: /Feature
             Method: POST
             RestApiId:
-              Ref: RestAPi
+              Ref: RestApi
 
   GetFeatureFunction:
     Type: AWS::Serverless::Function
@@ -51,7 +46,7 @@ Resources:
         List:
           Type: Api
           Properties:
-            Path: /Feature/{id}
+            Path: /Feature/{propertyId}
             Method: GET
             RestApiId:
               Ref: RestApi
@@ -87,7 +82,7 @@ Resources:
         List:
           Type: Api
           Properties:
-            Path: /Feature/{id}
+            Path: /Feature/{propertyId}
             Method: PUT
             RestApiId:
               Ref: RestApi
@@ -107,7 +102,7 @@ Resources:
         List:
           Type: Api
           Properties:
-            Path: /Feature/{id}
+            Path: /Feature/{propertyId}
             Method: DELETE
             RestApiId:
               Ref: RestApi
