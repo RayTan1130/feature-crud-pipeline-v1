@@ -9,35 +9,221 @@ Description: >
 Globals:
   Function:
     Timeout: 30
+    Runtime: java8
+    MemorySize: 256
 
 Resources:
-  HelloWorldFunction:
-    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+
+#  HelloWorldFunction:
+  RestApi:
+    Type: AWS::Serverless::Api # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
-      CodeUri: ./
-      Handler: helloworld.App::handleRequest
-      Runtime: java8
-      MemorySize: 512
-      Environment: # More info about Env Vars: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#environment-object
-        Variables:
-          PARAM1: VALUE
+      StageName: prod
+
+  CreateFeatureFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: target/HelloWorld-1.0.jar
+      Handler: helloworld.FeatureHandler::create
+      Policies:
+        DynamoDBCrudPolicy:
+          TableName:
+            Ref: FeatureTable
       Events:
-        HelloWorld:
-          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+        List:
+          Type: Api
           Properties:
-            Path: /hello
-            Method: get
+            Path:/Feature
+            Method: POST
+            RestApiId:
+              Ref: RestAPi
+
+  GetFeatureFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: target/HelloWorld-1.0.jar
+      Handler: helloworld.FeatureHandler::read
+      Policies:
+        DynamoDBReadPolicy:
+          TableName:
+            Ref: FeatureTable
+      Events:
+        List:
+          Type: Api
+          Properties:
+            Path: /Feature/{id}
+            Method: GET
+            RestApiId:
+              Ref: RestApi
+
+  ListAllFeatureFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: target/HelloWorld-1.0.jar
+      Handler: helloworld.FeatureHandler::getAll
+      Policies:
+        DynamoDBReadPolicy:
+          TableName:
+            Ref: FeatureTable
+      Events:
+        List:
+          Type: Api
+          Properties:
+            Path: /Feature
+            Method: GET
+            RestApiId:
+              Ref: RestApi
+
+  UpdateFeatureFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: target/HelloWorld-1.0.jar
+      Handler: helloworld.FeatureHandler::update
+      Policies:
+        DynamoDBReadPolicy:
+          TableName:
+            Ref: FeatureTable
+      Events:
+        List:
+          Type: Api
+          Properties:
+            Path: /Feature/{id}
+            Method: PUT
+            RestApiId:
+              Ref: RestApi
+
+  DeleteFeatureFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: target/HelloWorld-1.0.jar
+      #CodeUri: ./
+      Handler: helloworld.FeatureHandler::delete
+      Role: !GetAtt FeatureCRUDRole.Arn
+      Policies:
+        DynamoDBReadPolicy:
+          TableName:
+            Ref: FeatureTable
+      Events:
+        List:
+          Type: Api
+          Properties:
+            Path: /Feature/{id}
+            Method: DELETE
+            RestApiId:
+              Ref: RestApi
+
+  GetPropertyFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: target/HelloWorld-1.0.jar
+      #CodeUri: ./
+      Handler: map.getProperty::handleRequest
+      Policies:
+        DynamoDBReadPolicy:
+          TableName:
+            Ref: GeoTable
+      Events:
+        List:
+          Type: Api
+          Properties:
+            Path: /Map/{latitude&longitude}
+            Method: GET
+            RestApiId:
+              Ref: RestApi
+
+  FeatureTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      TableName:
+        Fn::Sub: feature-v3
+      PrimaryKey:
+        Name: propertyId
+        Type: String
+
+  GeoTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      TableName:
+        Fn::Sub: GeoTable
+      PrimaryKey:
+        Name: id
+        Type: String
+
+  #https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-role.html
+  FeatureCRUDRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: root
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: VisualEditor0
+                Effect: Allow
+                Action: dynamodb:*
+                Resource:
+                  -
+                    arn:aws:dynamodb:us-west-1:635341036773:table/feature-v3
+                    arn:aws:dynamodb:us-west-1:635341036773:table/feature-v3/index/*
 
 Outputs:
-  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
-  # Find out more about other implicit resources you can reference within SAM
-  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
-  HelloWorldApi:
+
+  RestApi:
     Description: "API Gateway endpoint URL for Prod stage for Hello World function"
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/"
-  HelloWorldFunction:
-    Description: "Hello World Lambda Function ARN"
-    Value: !GetAtt HelloWorldFunction.Arn
-  HelloWorldFunctionIamRole:
-    Description: "Implicit IAM Role created for Hello World function"
-    Value: !GetAtt HelloWorldFunctionRole.Arn
+    Value: !Sub "https://RestApi.execute-api.${AWS::Region}.amazonaws.com/Prod/feature/"
+  CreateFeatureFunction:
+    Description: "CreateFeatureFunctionARN"
+    Value: !GetAtt CreateFeatureFunction.Arn
+  CreateFeatureIamRole:
+    Descriptions: "Implicit IAM Role created for CreateFeatureFunction"
+    Value: !GetAtt CreateFeatureFunctionRole.Arn
+  CetFeatureFunction:
+    Description: "GetFeatureFunctionARN"
+    Value: !GetAtt GetFeatureFunction.Arn
+  GetFeatureFunctionIamRole:
+    Description: "Implicit IAM Role created for GetFeatureFunction"
+    Value: !GetAtt GetFeatureFunctionRole.Arn
+  UpdateFeatureFunction:
+    Description: "UpdateFeatureFunctionARN"
+    Value: !GetAtt UpdateFeatureFunction.Arn
+  UpdateFeatureFunctionIamRole:
+    Description: "Implicit IAM Role created for UpdateFeatureFunction"
+    Value: !GetAtt UpdateFeatureFunctionRole.Arn
+  DeleteFeatureFunction:
+    Description: "DeleteFeatureFunctionARN"
+    Value: !GetAtt DeleteFeatureFunction.Arn
+
+#      Runtime: java8
+#      MemorySize: 512
+#      Environment: # More info about Env Vars: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#environment-object
+#        Variables:
+#          PARAM1: VALUE
+#      Events:
+#        HelloWorld:
+#          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+#          Properties:
+#            Path: /hello
+#            Method: get
+
+#Outputs:
+#  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
+#  # Find out more about other implicit resources you can reference within SAM
+#  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
+#  HelloWorldApi:
+#    Description: "API Gateway endpoint URL for Prod stage for Hello World function"
+#    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/"
+#  HelloWorldFunction:
+#    Description: "Hello World Lambda Function ARN"
+#    Value: !GetAtt HelloWorldFunction.Arn
+#  HelloWorldFunctionIamRole:
+#    Description: "Implicit IAM Role created for Hello World function"
+#    Value: !GetAtt HelloWorldFunctionRole.Arn
