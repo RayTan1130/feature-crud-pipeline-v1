@@ -36,7 +36,7 @@ public class FeatureHandler {
         return new DynamoDBMapper(client);
     }
 
-    public APIGatewayProxyResponseEvent creat(APIGatewayProxyRequestEvent request, Context context){
+    public APIGatewayProxyResponseEvent create(APIGatewayProxyRequestEvent request, Context context){
         DynamoDBMapper mapper = this.initDynamoDBClient();
 
         String body = request.getBody();

@@ -61,9 +61,7 @@ public class Feature {
         this.propertyId = propertyId;
     }
 
-    public void setType(String type) {
-        this.type = type;
-    }
+    public void setType(String type) { this.type = type; }
 
     public void setParking(String parking) {
         this.parking = parking;
