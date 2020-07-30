@@ -33,7 +33,7 @@ Resources:
         List:
           Type: Api
           Properties:
-            Path:/Feature
+            Path: /Feature
             Method: POST
             RestApiId:
               Ref: RestAPi
