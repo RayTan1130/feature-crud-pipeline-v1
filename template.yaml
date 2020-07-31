@@ -179,7 +179,7 @@ Outputs:
     Description: "CreateFeatureFunctionARN"
     Value: !GetAtt CreateFeatureFunction.Arn
   CreateFeatureIamRole:
-    Descriptions: "Implicit IAM Role created for CreateFeatureFunction"
+    Description: "Implicit IAM Role created for CreateFeatureFunction"
     Value: !GetAtt CreateFeatureFunctionRole.Arn
   CetFeatureFunction:
     Description: "GetFeatureFunctionARN"
